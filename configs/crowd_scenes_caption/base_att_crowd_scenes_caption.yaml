@@ -1,0 +1,111 @@
+####################################### DATASETS #######################################
+DATASETS:
+  TRAIN: 'CrowdscenesDataset'
+  VAL: 'CrowdscenesDataset'
+  TEST: 'CrowdscenesDataset'
+
+###################################### DATALOADER ######################################
+DATALOADER:
+  TRAIN_BATCH_SIZE: 8
+  TEST_BATCH_SIZE: 32
+  NUM_WORKERS: 0
+  FEATS_FOLDER: './open_source_dataset/crowdscenes_caption/features/faster_rnn'
+  ANNO_FOLDER:  './open_source_dataset/crowdscenes_caption'
+  SEQ_PER_SAMPLE:  6
+  MAX_FEAT_NUM: 50
+
+######################################### Engine #########################################
+ENGINE:
+  NAME: 'DefaultTrainer'
+
+######################################### Scheduled sampling #########################################
+SCHEDULED_SAMPLING:
+  START_EPOCH: 0
+  INC_EVERY_EPOCH: 5
+  INC_PROB: 0.05
+  MAX_PROB: 0.25
+
+######################################### MODEL #########################################
+MODEL:
+  VOCAB_SIZE: 2660 # include <BOS>/<EOS>
+  META_ARCHITECTURE: 'RnnAttEncoderDecoder'
+  ENCODER: 'Crowdcaption_encoder'
+  ENCODER_DIM: 1024
+  DECODER: 'Crowdcaption_decoder'
+  DECODER_DIM: 1024
+  PREDICTOR: 'CrowdPredictor'
+  PRED_DROPOUT: 0.5
+  MAX_SEQ_LEN: 50
+
+#################################### Token embedding ####################################
+  TOKEN_EMBED:
+    NAME: 'TokenBaseEmbedding'
+    DIM: 1024
+    ACTIVATION: 'relu'
+    USE_NORM: False
+    DROPOUT: 0.5
+
+#################################### Visual embedding ####################################
+  VISUAL_EMBED:
+    NAME: 'VisualEmbeddingCrowd'
+    IN_DIM: 2048
+    OUT_DIM: 1024
+    ACTIVATION: 'relu'
+    USE_NORM: False
+    DROPOUT: 0.5
+  
+####################################### Optimizer #######################################
+SOLVER:
+  NAME: 'Adam'
+  EPOCH: 80
+  WRITE_PERIOD: 10
+  CHECKPOINT_PERIOD: 1         #save times
+  EVAL_PERIOD: 1
+  BASE_LR: 0.0005
+  BIAS_LR_FACTOR: 1.0
+  WEIGHT_DECAY: 0.0
+  WEIGHT_DECAY_NORM: 0.0
+  WEIGHT_DECAY_BIAS: 0.0
+  MOMENTUM: 0.9
+  DAMPENING: 0.0
+  NESTEROV: 0.0
+  BETAS: [0.9, 0.999]
+  EPS: 1e-8
+  GRAD_CLIP: 0.1
+  GRAD_CLIP_TYPE: 'value'
+  NORM_TYPE: 2.0
+  
+####################################### lr scheduler ####################################### 
+LR_SCHEDULER:
+  NAME: 'StepLR'
+  STEP_SIZE: 3
+  GAMMA: 0.8
+
+####################################### losses ####################################### 
+LOSSES:
+  NAMES: ['LabelSmoothing']
+  LABELSMOOTHING: 0.1
+
+####################################### scorer ####################################### 
+SCORER:
+  NAME: 'BaseScorer'
+  TYPES: ['Cider']
+  WEIGHTS: [1.0]
+  GT_PATH: './open_source_dataset/crowdscenes_caption/mic_train_gts.pkl'
+  CIDER_CACHED: './open_source_dataset/crowdscenes_caption/mic_train_cider.pkl'
+  EOS_ID: 0
+
+####################################### decode strategy ####################################### 
+DECODE_STRATEGY:
+  NAME: 'BeamSearcher'
+  BEAM_SIZE: 3
+
+####################################### evaluation ####################################### 
+INFERENCE:
+  NAME: 'COCOEvaler'
+  VOCAB: './open_source_dataset/crowdscenes_caption/vocabulary.txt'
+  ID_KEY: 'image_id'
+  VALUE: 'caption'
+  VAL_ANNFILE: './open_source_dataset/crowdscenes_caption/mic_val.json'
+  TEST_ANNFILE: './open_source_dataset/crowdscenes_caption/mic_test.json'
+  GENERATION_MODE: True

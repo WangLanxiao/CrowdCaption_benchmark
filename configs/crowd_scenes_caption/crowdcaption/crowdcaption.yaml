@@ -1,0 +1,87 @@
+_BASE_: "../base_att_crowd_scenes_caption.yaml"
+OUTPUT_DIR : "work_dirs/crowdcaption"
+###################################### DATALOADER ######################################
+DATALOADER:
+  FEATS_FOLDER: './open_source_dataset/crowdscenes_caption/features/faster_rnn'
+  ANNO_FOLDER:  './open_source_dataset/crowdscenes_caption'
+  HRNET_FOLDER: './open_source_dataset/crowdscenes_caption/features/hrnet_keypoint'    #use in paper
+#  HRNET_FOLDER: './open_source_dataset/crowdscenes_caption/features/hrnet_backbone'    # have better performance
+  TRAIN_BATCH_SIZE: 16
+  TEST_BATCH_SIZE: 32
+  NUM_WORKERS: 0
+
+######################################### Scheduled sampling #########################################
+SCHEDULED_SAMPLING:
+  START_EPOCH: 8
+  INC_EVERY_EPOCH: 4
+  INC_PROB: 0.05
+  MAX_PROB: 0.5
+
+######################################### MODEL #########################################
+MODEL:
+  ATTRIBUTION_VOCAB_SIZE: 284
+  BEHAVIOR_VOCAB_SIZE: 464
+  OBJECT_VOCAB_SIZE: 1862
+  ENCODER: 'Crowdcaption_encoder'
+  DECODER: 'Crowdcaption_decoder'
+  PREDICTOR: 'CrowdPredictor'
+  PRED_DROPOUT: 0.5
+  MAX_SEQ_LEN: 50
+  VISUAL_EMBED:
+    NAME: 'VisualEmbeddingCrowd'
+    IN_DIM: 2048
+    OUT_DIM: 1024
+    ACTIVATION: 'relu'
+    USE_NORM: False
+    DROPOUT: 0.5
+    LOCATION_SIZE: 5
+
+####################################### Optimizer #######################################
+SOLVER:
+  NAME: 'Adam'
+  EPOCH: 80
+  WRITE_PERIOD: 10
+  CHECKPOINT_PERIOD: 1         #save times
+  EVAL_PERIOD: 2
+  BASE_LR: 0.0005
+  BIAS_LR_FACTOR: 1.0
+  WEIGHT_DECAY: 0.0
+  WEIGHT_DECAY_NORM: 0.0
+  WEIGHT_DECAY_BIAS: 0.0
+  MOMENTUM: 0.9
+  DAMPENING: 0.0
+  NESTEROV: 0.0
+  BETAS: [0.9, 0.98]
+  EPS: 1.0e-9
+  GRAD_CLIP: 0.5
+  GRAD_CLIP_TYPE: 'norm'
+  NORM_TYPE: 2.0
+  
+####################################### lr scheduler ####################################### 
+#LR_SCHEDULER:   #use in paper
+#  NAME: 'NoamLR'
+#  MODEL_SIZE: 1024
+#  FACTOR: 1.0
+#  WARMUP: 1000
+
+LR_SCHEDULER:
+  NAME: 'StepLR'
+  STEP_SIZE: 5
+  GAMMA: 0.8
+
+####################################### losses ####################################### 
+LOSSES:
+  NAMES: ['CrossEntropy','Crowd_BCEWithLogits']
+  AERFA_OBJECT: 0.2
+  AERFA_ACTION: 0.2
+  AERFA_STATUS: 0.2
+
+INFERENCE:
+  NAME: 'COCOEvaler'
+  VOCAB: './open_source_dataset/crowdscenes_caption/vocabulary.txt'
+  ID_KEY: 'image_id'
+  VALUE: 'caption'
+  VAL_ANNFILE: './open_source_dataset/crowdscenes_caption/mic_val.json'
+  TEST_ANNFILE: './open_source_dataset/crowdscenes_caption/mic_test.json'
+  GENERATION_MODE: True
+
